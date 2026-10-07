@@ -1,5 +1,6 @@
 import pygame
 import random
+from pathlib import Path
 from .hole import Hole
 
 # Game Engine
@@ -36,6 +37,18 @@ class GameEngine:
         self.game_over = False
         self.quit_requested = False
         self.difficulty = "Medium"
+        self.hit_sound = None
+        self.miss_sound = None
+        self.game_over_sound = None
+        try:
+            if pygame.mixer.get_init() is None:
+                pygame.mixer.init()
+            sound_dir = Path(__file__).resolve().parent / "assets" / "sounds"
+            self.hit_sound = pygame.mixer.Sound(str(sound_dir / "hit.wav"))
+            self.miss_sound = pygame.mixer.Sound(str(sound_dir / "miss.wav"))
+            self.game_over_sound = pygame.mixer.Sound(str(sound_dir / "game_over.wav"))
+        except (pygame.error, OSError):
+            self.hit_sound = self.miss_sound = self.game_over_sound = None
 
     def handle_event(self, event):
         if self.game_over:
@@ -75,6 +88,14 @@ class GameEngine:
             hole.active = False
             hole.timer = 0
 
+    @staticmethod
+    def _play_sound(sound):
+        if sound is not None:
+            try:
+                sound.play()
+            except pygame.error:
+                pass
+
     def _handle_click(self, pos):
         hit_something = False
 
@@ -82,10 +103,12 @@ class GameEngine:
             if hole.active and hole.contains_point(pos) and hole.whack():
                 self.score += 1
                 hit_something = True
+                self._play_sound(self.hit_sound)
                 break
 
         if not hit_something:
             self.misses += 1
+            self._play_sound(self.miss_sound)
 
     def handle_input(self):
         # Reserved for continuously-held-key input; this game is
@@ -99,6 +122,7 @@ class GameEngine:
         self.time_left_frames -= 1
         if self.time_left_frames <= 0:
             self.game_over = True
+            self._play_sound(self.game_over_sound)
             return
 
         for hole in self.holes:
