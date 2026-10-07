@@ -31,6 +31,8 @@ class GameEngine:
         self.score = 0
         self.misses = 0
         self.font = pygame.font.SysFont("Arial", 28)
+        self.game_over_font = pygame.font.SysFont("Arial", 52, bold=True)
+        self.final_score_font = pygame.font.SysFont("Arial", 32)
         self.game_over = False
 
     def handle_event(self, event):
@@ -71,6 +73,21 @@ class GameEngine:
                 hole.pop_up(self.mole_up_frames)
 
     def render(self, screen):
+        if self.game_over:
+            game_over_text = self.game_over_font.render("GAME OVER", True, BLACK)
+            final_score_text = self.final_score_font.render(
+                f"Final Score: {self.score}", True, BLACK
+            )
+            screen.blit(
+                game_over_text,
+                game_over_text.get_rect(center=(self.width // 2, self.height // 2 - 35)),
+            )
+            screen.blit(
+                final_score_text,
+                final_score_text.get_rect(center=(self.width // 2, self.height // 2 + 25)),
+            )
+            return
+
         for hole in self.holes:
             pygame.draw.circle(screen, DARK_BROWN, (hole.center_x, hole.center_y), 40)
             if hole.active:
@@ -82,8 +99,3 @@ class GameEngine:
         seconds_left = max(0, self.time_left_frames // 60)
         timer_text = self.font.render(f"Time: {seconds_left}s", True, BLACK)
         screen.blit(timer_text, (self.width - 140, 10))
-
-        if self.game_over and not getattr(self, "_game_over_logged", False):
-            # NOTE: no proper game-over screen yet - see Task 2 in the README.
-            print("Time's up! Final score:", self.score)
-            self._game_over_logged = True
