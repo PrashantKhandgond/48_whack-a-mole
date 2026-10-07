@@ -1,11 +1,9 @@
 import pygame
 
 class Hole:
-    def __init__(self, center_x, center_y, hit_size=150):
+    def __init__(self, center_x, center_y, hit_size=64):
         self.center_x = center_x
         self.center_y = center_y
-        # NOTE: intentionally larger than the spacing between holes -
-        # see Task 1 in the README.
         self.hit_size = hit_size
         self.active = False
         self.timer = 0
@@ -34,3 +32,9 @@ class Hole:
             self.hit_size,
             self.hit_size,
         )
+
+    def contains_point(self, pos):
+        dx = pos[0] - self.center_x
+        dy = pos[1] - self.center_y
+        radius = self.hit_size / 2
+        return dx * dx + dy * dy <= radius * radius
